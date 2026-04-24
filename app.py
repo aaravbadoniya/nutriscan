@@ -26,9 +26,9 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 models = {
     "fruits": tf.keras.models.load_model("Models/Fruits/model.savedmodel"),
-    "snacks": tf.keras.models.load_model("Models/Snacks/model.savedmodel"),
-    "drinks": tf.keras.models.load_model("Models/Drinks/model.savedmodel"),
-    "sweets": tf.keras.models.load_model("Models/Sweets/model.savedmodel"),
+    "snacks": tf.keras.models.load_model("Models/Snacks/snack_model.h5"),
+    "drinks": tf.keras.models.load_model("Models/Drinks/drink_model.h5"),
+    "sweets": tf.keras.models.load_model("Models/Sweets/sweet_model.h5"),
 }
 
 
@@ -38,17 +38,18 @@ models = {
 
 labels = {}
 
-for category in models:
+# Mapping specific label files to categories
+label_files = {
+    "fruits": "Models/Fruits/labels.txt",
+    "snacks": "Models/Snacks/snack_labels.txt.txt",
+    "drinks": "Models/Drinks/drink_label.txt.txt",
+    "sweets": "Models/Sweets/sweet_label.txt.txt"
+}
 
-    label_path = f"Models/{category.capitalize()}/labels.txt"
-
+for category, label_path in label_files.items():
     if os.path.exists(label_path):
-
         with open(label_path, "r") as f:
-
-            labels[category] = [
-                line.strip() for line in f.readlines()
-            ]
+            labels[category] = [line.strip() for line in f.readlines()]
 
 
 # =====================================================
@@ -264,6 +265,7 @@ def index():
     label = None
     confidence = None
     meal_cal = 0
+    product_info = {}
 
     daily_goal = 2000
 
