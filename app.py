@@ -24,11 +24,18 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 # LOAD MODELS
 # =====================================================
 
+def safe_load_model(path):
+    try:
+        return tf.keras.models.load_model(path)
+    except Exception as e:
+        print(f"[!] Error loading model at {path}: {e}")
+        return None
+
 models = {
-    "fruits": tf.keras.models.load_model("Models/Fruits/model.savedmodel"),
-    "snacks": tf.keras.models.load_model("Models/Snacks/snack_model.h5"),
-    "drinks": tf.keras.models.load_model("Models/Drinks/drink_model.h5"),
-    "sweets": tf.keras.models.load_model("Models/Sweets/sweet_model.h5"),
+    "fruits": safe_load_model("Models/Fruits/model.savedmodel"),
+    "snacks": safe_load_model("Models/Snacks/snack_model.h5"),
+    "drinks": safe_load_model("Models/Drinks/drink_model.h5"),
+    "sweets": safe_load_model("Models/Sweets/sweet_model.h5"),
 }
 
 
