@@ -1,0 +1,6 @@
+0 Coca-Cola
+1 Pepsi
+2 Sprite
+3 Fanta
+4 Frooti
+5 Apple Juice

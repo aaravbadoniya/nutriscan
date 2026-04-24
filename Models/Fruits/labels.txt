@@ -1,0 +1,9 @@
+0 Apples
+1 Oranges
+2 Banana
+3 Plums
+4 Alphonso Mango
+5 Grapes
+6 Kiwi
+7 Strawberry
+8 Watermelon

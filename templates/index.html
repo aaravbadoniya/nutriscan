@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>NutriScan Healthcare</title>
+
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+
+
+    <style>
+
+        body {
+
+            background-color: #f4f6f9;
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        }
+
+
+
+        .main-card {
+
+            border-radius: 20px;
+
+            border: none;
+
+        }
+
+
+
+        .progress {
+
+            height: 28px;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+        }
+
+
+
+        .progress-bar {
+
+            font-weight: bold;
+
+        }
+
+
+
+        .btn-primary {
+
+            border-radius: 12px;
+
+            padding: 14px;
+
+            font-weight: bold;
+
+        }
+
+
+
+        .result-card {
+
+            border-left: 6px solid #198754;
+
+            border-radius: 15px;
+
+        }
+
+
+
+        .nutrition-box {
+
+            border-radius: 12px;
+
+            padding: 10px;
+
+            background: #f8f9fa;
+
+            text-align: center;
+
+        }
+
+    </style>
+
+</head>
+
+
+
+<body class="py-5">
+
+
+
+<div class="container"
+     style="max-width: 650px;">
+
+
+
+    <!-- ===================================== -->
+    <!-- TITLE -->
+    <!-- ===================================== -->
+
+    <h1 class="text-center
+               fw-bold
+               text-success
+               mb-4">
+
+        NutriScan
+
+    </h1>
+
+
+
+    <!-- ===================================== -->
+    <!-- DAILY CALORIES -->
+    <!-- ===================================== -->
+
+    <div class="card main-card shadow p-4 mb-4">
+
+        <h4 class="fw-bold mb-3">
+
+            Daily Calorie Budget
+
+        </h4>
+
+
+
+        <div class="progress mb-3">
+
+            <div class="progress-bar bg-success"
+                 role="progressbar"
+
+                 style="width: {{ progress }}%;">
+
+                {{ progress|round(1) }}%
+
+            </div>
+
+        </div>
+
+
+
+        <p class="text-center mb-0">
+
+            <strong>
+                {{ daily_total | round(0) }}
+            </strong>
+
+            /
+
+            {{ goal }} kcal consumed
+
+        </p>
+
+    </div>
+
+
+
+    <!-- ===================================== -->
+    <!-- RESULT SECTION -->
+    <!-- ===================================== -->
+
+    {% if label %}
+
+    <div class="card result-card shadow p-4 mb-4">
+
+        <h3 class="text-success fw-bold">
+
+            Detected:
+
+            {{ label }}
+
+        </h3>
+
+
+
+        <p class="text-muted">
+
+            Confidence:
+
+            {{ (confidence * 100)|round(1) }}%
+
+        </p>
+
+
+
+        <div class="row g-3 mt-2">
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <h6>Meal Calories</h6>
+
+                    <strong>
+
+                        {{ meal_cal }}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <h6>Status</h6>
+
+                    <strong class="text-success">
+
+                        Added
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+
+    <!-- ===================================== -->
+    <!-- MAIN FORM -->
+    <!-- ===================================== -->
+
+    <div class="card main-card shadow p-4">
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+
+
+            <!-- CATEGORY -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Select Category
+
+                </label>
+
+
+
+                <select name="category"
+                        class="form-select form-select-lg">
+
+                    <option value="fruits">
+
+                        Fruits
+
+                    </option>
+
+                    <option value="snacks">
+
+                        Snacks
+
+                    </option>
+
+                    <option value="drinks">
+
+                        Drinks
+
+                    </option>
+
+                    <option value="sweets">
+
+                        Sweets
+
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- OPTION -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Product Option
+
+                </label>
+
+
+
+                <input type="text"
+                       name="option"
+
+                       class="form-control
+                              form-control-lg"
+
+                       placeholder="Example:
+                       Small / ₹10 / 500ml"
+
+                       required>
+
+            </div>
+
+
+
+            <!-- QUANTITY -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Quantity
+
+                </label>
+
+
+
+                <input type="number"
+
+                       name="quantity"
+
+                       step="0.1"
+
+                       value="1"
+
+                       class="form-control
+                              form-control-lg">
+
+            </div>
+
+
+
+            <!-- IMAGE -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Upload Product Image
+
+                </label>
+
+
+
+                <input type="file"
+
+                       name="file"
+
+                       accept="image/*"
+
+                       class="form-control
+                              form-control-lg"
+
+                       required>
+
+            </div>
+
+
+
+            <!-- BUTTON -->
+
+            <button type="submit"
+
+                    class="btn btn-primary
+                           w-100">
+
+                Scan Meal & Log Nutrition
+
+            </button>
+
+
+
+        </form>
+
+    </div>
+
+
+
+</div>
+
+
+
+</body>
+
+</html>

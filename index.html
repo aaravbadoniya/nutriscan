@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>NutriScan Healthcare</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        body {
+
+            background-color: #f4f6f9;
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        }
+
+        .main-card {
+
+            border-radius: 20px;
+
+            border: none;
+
+        }
+
+        .progress {
+
+            height: 28px;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+
+        }
+
+        .progress-bar {
+
+            font-weight: bold;
+
+        }
+
+        .btn-success {
+
+            border-radius: 12px;
+
+            padding: 14px;
+
+            font-weight: bold;
+
+        }
+
+        .result-card {
+
+            border-left: 6px solid #198754;
+
+            border-radius: 15px;
+
+        }
+
+        .nutrition-box {
+
+            border-radius: 12px;
+
+            padding: 12px;
+
+            background: #f8f9fa;
+
+            text-align: center;
+
+        }
+
+    </style>
+
+</head>
+
+<body class="py-5">
+
+<div class="container"
+     style="max-width: 700px;">
+
+    <!-- ===================================== -->
+    <!-- TITLE -->
+    <!-- ===================================== -->
+
+    <h1 class="text-center fw-bold text-success mb-2">
+
+        NutriScan
+
+    </h1>
+
+    <p class="text-center text-muted mb-4">
+
+        AI Powered Nutrition Scanner
+
+    </p>
+
+
+
+    <!-- ===================================== -->
+    <!-- DAILY CALORIE CARD -->
+    <!-- ===================================== -->
+
+    <div class="card main-card shadow p-4 mb-4">
+
+        <h4 class="fw-bold mb-3">
+
+            Daily Calorie Budget
+
+        </h4>
+
+        <div class="progress mb-3">
+
+            <div class="progress-bar bg-success"
+                 id="myProgressBar"
+                 role="progressbar"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+
+                {{ progress|round(1) }}%
+
+            </div>
+
+        </div>
+
+        <script>
+
+            var progress = Number("{{ progress }}");
+
+            var bar = document.getElementById("myProgressBar");
+
+            bar.style.width = progress + "%";
+
+            bar.setAttribute(
+                "aria-valuenow",
+                progress
+            );
+
+        </script>
+
+        <p class="text-center mb-0">
+
+            <strong>
+
+                {{ daily_total | round(0) }}
+
+            </strong>
+
+            / {{ goal }} kcal consumed
+
+        </p>
+
+    </div>
+
+
+
+    <!-- ===================================== -->
+    <!-- RESULT SECTION -->
+    <!-- ===================================== -->
+
+    {% if label %}
+
+    <div class="card result-card shadow p-4 mb-4">
+
+        <h3 class="text-success fw-bold">
+
+            Detected: {{ label }}
+
+        </h3>
+
+        <p class="text-muted">
+
+            Confidence:
+            {{ (confidence * 100)|round(1) }}%
+
+        </p>
+
+        <div class="row g-3 mt-2">
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <h6>Meal Calories</h6>
+
+                    <strong>
+
+                        {{ meal_cal }}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <h6>Status</h6>
+
+                    <strong class="text-success">
+
+                        Added
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Nutrition Values -->
+
+        <div class="row g-3 mt-3">
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <strong>Protein</strong>
+
+                    <p>{{ protein }} g</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <strong>Sugar</strong>
+
+                    <p>{{ sugar }} g</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <strong>Fat</strong>
+
+                    <p>{{ fat }} g</p>
+
+                </div>
+
+            </div>
+
+            <div class="col-6">
+
+                <div class="nutrition-box">
+
+                    <strong>Fibre</strong>
+
+                    <p>{{ fibre }} g</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+
+
+    <!-- ===================================== -->
+    <!-- NUTRITION CHART -->
+    <!-- ===================================== -->
+
+    {% if label %}
+
+    <div class="card main-card shadow p-4 mb-4">
+
+        <h4 class="mb-4 text-center">
+
+            Nutrition Breakdown
+
+        </h4>
+
+        <canvas id="nutritionChart"></canvas>
+
+    </div>
+
+    {% endif %}
+
+
+
+    <!-- ===================================== -->
+    <!-- MAIN FORM -->
+    <!-- ===================================== -->
+
+    <div class="card main-card shadow p-4">
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+
+
+            <!-- CATEGORY -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Select Category
+
+                </label>
+
+                <select name="category"
+                        class="form-select">
+
+                    <option value="fruits">
+                        Fruits
+                    </option>
+
+                    <option value="snacks">
+                        Snacks
+                    </option>
+
+                    <option value="drinks">
+                        Drinks
+                    </option>
+
+                    <option value="sweets">
+                        Sweets
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- OPTION -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Product Option
+
+                </label>
+
+                <input
+                    type="text"
+                    name="option"
+                    class="form-control"
+                    placeholder="Example: Small / ₹10 / 500ml"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- QUANTITY -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Quantity
+
+                </label>
+
+                <input
+                    type="number"
+                    name="quantity"
+                    step="0.1"
+                    value="1"
+                    class="form-control"
+                >
+
+            </div>
+
+
+
+            <!-- IMAGE -->
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+
+                    Upload Product Image
+
+                </label>
+
+                <input
+                    type="file"
+                    name="file"
+                    accept="image/*"
+                    class="form-control"
+                    required
+                >
+
+            </div>
+
+
+
+            <!-- BUTTON -->
+
+            <button
+                type="submit"
+                class="btn btn-success w-100"
+            >
+
+                Scan Meal & Log Nutrition
+
+            </button>
+
+        </form>
+
+    </div>
+
+
+
+    <!-- ===================================== -->
+    <!-- FOOTER -->
+    <!-- ===================================== -->
+
+    <div class="text-center mt-4 text-muted">
+
+        NutriScan Healthcare System
+
+    </div>
+
+</div>
+
+
+
+<!-- ===================================== -->
+<!-- CHART SCRIPT -->
+<!-- ===================================== -->
+
+{% if label %}
+
+<script>
+
+const ctx =
+document.getElementById(
+    'nutritionChart'
+);
+
+new Chart(ctx, {
+
+    type: 'bar',
+
+    data: {
+
+        labels: [
+
+            'Protein',
+            'Sugar',
+            'Fat',
+            'Fibre'
+
+        ],
+
+        datasets: [{
+
+            label: 'Nutrition Values',
+
+            data: [
+
+                Number("{{ protein }}"),
+
+                Number("{{ sugar }}"),
+
+                Number("{{ fat }}"),
+
+                Number("{{ fibre }}")
+
+            ]
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        scales: {
+
+            y: {
+
+                beginAtZero: true
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+{% endif %}
+
+</body>
+
+</html>
