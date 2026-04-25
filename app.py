@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, session
-import tensorflow as tf
+import onnxruntime as ort
 import numpy as np
 from PIL import Image
 import os
@@ -26,16 +26,24 @@ if not os.path.exists(app.config['UPLOAD_FOLDER']):
 
 def safe_load_model(path):
     try:
-        return tf.keras.models.load_model(path)
+        return ort.InferenceSession(path)
     except Exception as e:
         print(f"[!] Error loading model at {path}: {e}")
         return None
 
 models = {
-    "fruits": safe_load_model("Models/Fruits/model.savedmodel"),
-    "snacks": safe_load_model("Models/Snacks/snack_model.h5"),
-    "drinks": safe_load_model("Models/Drinks/drink_model.h5"),
-    "sweets": safe_load_model("Models/Sweets/sweet_model.h5"),
+    "fruits": safe_load_model("Models/Fruits/model.onnx"),
+    "snacks": safe_load_model("Models/Snacks/snack_model.onnx"),
+    "drinks": safe_load_model("Models/Drinks/drink_model.onnx"),
+    "sweets": safe_load_model("Models/Sweets/sweet_model.onnx"),
+}
+
+# ONNX input node names differ slightly per model
+model_input_names = {
+    "fruits": "sequential_1_input",
+    "snacks": "sequential_1_input:0",
+    "drinks": "sequential_1_input:0",
+    "sweets": "sequential_1_input:0",
 }
 
 
@@ -89,21 +97,23 @@ def allowed_file(file):
 
 def predict_image(image_path, category):
 
-    model = models[category]
+    session  = models[category]
+    input_name = model_input_names[category]
     label_list = labels[category]
 
     img = Image.open(image_path).convert("RGB")
     img = img.resize((224, 224))
 
-    img_array = np.array(img) / 255.0
+    # ONNX runtime requires float32
+    img_array = np.array(img, dtype=np.float32) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    prediction = model.predict(img_array, verbose=0)
+    prediction = session.run(None, {input_name: img_array})[0]
 
-    index = np.argmax(prediction)
-    confidence = prediction[0][index]
+    index      = int(np.argmax(prediction))
+    confidence = float(prediction[0][index])
 
-    return label_list[index], float(confidence)
+    return label_list[index], confidence
 
 
 # =====================================================
@@ -149,7 +159,7 @@ def upload_hardware():
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
-    final_label = None
+    final_label      = None
     detected_category = None
 
     try:
@@ -158,7 +168,7 @@ def upload_hardware():
                 continue
             label, confidence = predict_image(filepath, category)
             if confidence > 0.70:
-                final_label = label
+                final_label       = label
                 detected_category = category
                 break
     except Exception as e:
@@ -170,8 +180,8 @@ def upload_hardware():
     if not final_label:
         return "ERROR|NOT_RECOGNIZED", 200
 
-    product_rows = data[data["product"].str.lower() == final_label.lower()]
-    options = product_rows["option"].dropna().astype(str).unique()
+    product_rows  = data[data["product"].str.lower() == final_label.lower()]
+    options       = product_rows["option"].dropna().astype(str).unique()
     options_string = ",".join(options)
 
     return f"{final_label}|{detected_category}|{options_string}"
@@ -185,7 +195,7 @@ def upload_hardware():
 def get_nutrition_hardware():
 
     product = request.form.get("product", "").strip()
-    option  = request.form.get("option", "").strip()
+    option  = request.form.get("option",  "").strip()
 
     if not product or not option:
         return "0|0|0|0"
@@ -198,11 +208,11 @@ def get_nutrition_hardware():
     if row.empty:
         return "0|0|0|0"
 
-    row = row.iloc[0]
+    row      = row.iloc[0]
     calories = row.get("calories", 0)
-    protein  = row.get("protein", 0)
-    sugar    = row.get("sugar", 0)
-    fat      = row.get("fat", 0)
+    protein  = row.get("protein",  0)
+    sugar    = row.get("sugar",    0)
+    fat      = row.get("fat",      0)
 
     return f"{calories}|{protein}|{sugar}|{fat}"
 
@@ -254,7 +264,7 @@ def index():
 
                     if option:
                         product_info = get_product_data(label, option)
-                        meal_cal = product_info["calories"] * quantity
+                        meal_cal     = product_info["calories"] * quantity
                         session['total_calories'] += meal_cal
                         session.modified = True
 
@@ -277,9 +287,9 @@ def index():
         progress=progress,
         goal=daily_goal,
         protein=product_info.get("protein", 0),
-        sugar=product_info.get("sugar", 0),
-        fat=product_info.get("fat", 0),
-        fibre=product_info.get("fibre", 0),
+        sugar=product_info.get("sugar",    0),
+        fat=product_info.get("fat",        0),
+        fibre=product_info.get("fibre",    0),
         error=error,
     )
 
