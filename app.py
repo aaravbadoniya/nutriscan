@@ -266,7 +266,7 @@ def index():
                     if os.path.exists(filepath):
                         os.remove(filepath)
 
-    progress = (session['total_calories'] / daily_goal) * 100
+    progress = min((session['total_calories'] / daily_goal) * 100, 100)
 
     return render_template(
         "index.html",
