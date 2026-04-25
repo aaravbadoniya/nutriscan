@@ -59,3 +59,6 @@ NutriScan is an AI-powered healthcare application designed to classify images of
 - `Models/`: Directory containing labeled datasets (`labels.txt`) and `.savedmodel` configurations for the ML categories.
 - `Nutriscan.ino`: A stub/placeholder for IoT microcontrollers making POST requests against the Flask server endpoints.
 - `uploads/`: Transitory folder created on boot used to temporarily store predicted images before they are deleted.
+
+
+source venv/bin/activate && pip install -r requirements.txt

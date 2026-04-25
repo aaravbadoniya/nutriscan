@@ -141,11 +141,8 @@
 
             <div class="progress-bar bg-success"
                  role="progressbar"
-
-                 style="width: {{ progress }}%;">
-
+                 style="--progress-width: {{ progress }}%; width: var(--progress-width);">
                 {{ progress|round(1) }}%
-
             </div>
 
         </div>
