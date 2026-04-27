@@ -74,6 +74,8 @@ sheet_url = "https://docs.google.com/spreadsheets/d/1397xmzJuacgHt7TH6EDXxUpMfeA
 
 try:
     data = pd.read_csv(sheet_url)
+    data.columns = data.columns.str.lower()
+    data = data.rename(columns={"size": "option", "fats": "fat"})
 except Exception as e:
     print(f"[!] Could not load nutrition data: {e}")
     data = pd.DataFrame(columns=["product", "option", "calories", "protein", "sugar", "fat", "fibre"])
@@ -146,20 +148,22 @@ def get_product_data(product_name, option):
 
 @app.route("/upload_hardware", methods=["POST"])
 def upload_hardware():
+    # ESP32 sends raw JPEG bytes with Content-Type: image/jpeg (not multipart)
+    image_data = request.get_data()
 
-    if 'file' not in request.files:
+    if not image_data:
         return "ERROR|NO_IMAGE", 400
 
-    file = request.files['file']
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], "hw_capture.jpg")
 
-    if not allowed_file(file):
-        return "ERROR|INVALID_FILE", 400
+    try:
+        with open(filepath, "wb") as f:
+            f.write(image_data)
+    except Exception as e:
+        print(f"[!] Could not save image: {e}")
+        return "ERROR|SAVE_FAILED", 500
 
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(filepath)
-
-    final_label      = None
+    final_label       = None
     detected_category = None
 
     try:
@@ -180,8 +184,8 @@ def upload_hardware():
     if not final_label:
         return "ERROR|NOT_RECOGNIZED", 200
 
-    product_rows  = data[data["product"].str.lower() == final_label.lower()]
-    options       = product_rows["option"].dropna().astype(str).unique()
+    product_rows   = data[data["product"].str.lower() == final_label.lower()]
+    options        = product_rows["option"].dropna().astype(str).unique()
     options_string = ",".join(options)
 
     return f"{final_label}|{detected_category}|{options_string}"
@@ -295,4 +299,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=5001, debug=False)
